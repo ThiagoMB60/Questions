@@ -1,0 +1,132 @@
+Instalando as bibliotecas no projeto:
+	*ejs: 		npm install ejs --save
+	*express:	npm install express --save
+===============================================================================
+Importando a biblioteca pro projeto:
+	*const express = require("express");
+===============================================================================
+Atribuindo a biblioteca à uma variavel:
+	*const app = express();
+===============================================================================
+Indicr para o Express qual o motor de Engine/view engine usar, nesse caso o 'EJS':
+	*app.set('view engine', 'ejs');
+*** IMPORTANTE *** :TODOS OS ARQUIVOS HTML DO PROJETO DEVEM OBRIGATORIAMENTE ESTAR EM UMA PASTA VOM NOME 'views' DENTRO DO PROJETO. Nesse caso em extensão .ejs ao inves de .html
+===============================================================================
+Compando para utilizar arquivos estáticos no backend, como css, imagens, js de frontend, entre otros:
+	*app.use(express.static('public')); //'public' é o nome do diretório no projeto onde se encontram os arquivos estaticos para uso.
+===============================================================================
+Criando a rota principal da aplicação/site:
+###	*app.get("", (req, res) => {
+###		res.send("Bem vindo ao meu site!");
+###	});
+
+COMO ESTAMOS UTLIZANDO O VIEW ENGINE 'EJS', DEVEMOS UTILIZAR O COMANDO 'res.render' AO INVES 'res.send', LOGO:
+	*app.get("", (req, res) => {
+		res.render("index");// vai renderizar o arquivo index da pasta views na rota informada
+	});
+===============================================================================
+Codigo responsavel por iniciar aplicação na porta indicada abaixo:
+	*app.listen(8080, () => {
+		console.log("App rodando..."); //essa função é simplesmente para imprimir no console qnd a aplicação iniciar e podermos visualizar isso.
+	});
+===============================================================================
+Comando para executar o arquivo .js: //usando o nodemon para que o servidor reinicialize automáticamente após salvar alguma alteração no arquivo.js
+	*nodemon index.js  //O diretorio já deve estar setado na pasta do arquivo.
+===============================================================================
+EXIBIR valor de variáveis no arquivo EJS:
+	*<%= nome_da_variavel %>
+===============================================================================
+Utilizar valor da variavel em um condicional:
+	*<% if(msg == true){ %>
+		<h3>ERROR! ERROR! ERROR! ERROR! ERROR! ERROR! </h3>
+	<%} %> 
+
+Agora com else:
+	*<% if(msg == true){ %>
+		<h3>ERROR! ERROR! ERROR! ERROR! ERROR! ERROR! </h3>
+	<%} else {%> 
+			<h3>SUCESS! SUCESS! SUCESS! SUCESS!</h3>
+	<%}%>
+===============================================================================
+Utilizando o FOREACH no array de objetos 'produtos' trago por variavel:
+	*<% produtos.forEach(function(produto){ %>
+		//aqui o corpo da função que irá executar para cada objeto do arrey de produtos
+	<%})%>
+===============================================================================
+Utilizar uma partial para padronizar o uso em diversas pages tendo como fonte um unico arquivo:
+	*<%- include('partials/header.ejs') %> //Usando o mesmo header para as paginas q utilizarem esse include
+===============================================================================
+Utilizar o BodyParser para transportar informações entre as rotas:
+	*app.use(bodyParser.urlencoded({extended: false}));
+	*app.use(bodyParser.json());
+===============================================================================
+Comando de instalação do Sequelize, biblioteca de manipulação de BD:
+	*npm install --save sequelize
+===============================================================================
+Biblioteca do mysql para trabalhar junto ao sequelize:
+	*npm install --save mysql2
+===============================================================================
+Criando a conexão do projeto com o BD, em uma pasta 'database' no projeto, criar um arquivo com .js para tal(ex: 'database.js') e conectar da seguinte forma:
+	*const sequelize = require('sequelize'); //atribuindo a biblioteca a uma variavel
+	const connection = new sequelize('nome do banco','usuário','senha do BD',{ //instanciando o obj do bd
+		host: 'local onde o BD está rodando',
+		dialect: 'tipo de SGBD(ex: mysql, mariadb, postgree, etc...)'
+	});
+
+	*module.exports = connection; //exportar o banco criado para usar em outros arquivos
+===============================================================================
+Importando o Banco criado no arquivo principal do projeto, index.js:
+	*const connection = require("./database/database");
+===============================================================================
+Testando a conexão com o banco de dados:
+	*connection
+	.authenticate() //tenta a autenticação
+	.then(()=>{ //executa se autenticar corretamente
+		console.log("Conexão executada com sucesso!") 
+	})
+	.catch((msgErro)=>{ //executa houver erro na autenticação
+		console.log("A conexão com o Database falhou!")
+	})
+===============================================================================
+Criando tabela usando o sequelize: Cria-se um arquivo.js com nome da tabela na pasta database, nesse caso o Pergunta.js:
+	*const sequelize = require("sequelize"); //importando o sequelize
+	*const connection = require("./satabase"); //importando o BD na mesma pasta
+
+	*const pergunta = connection.define('pergunta', { //definindo o nome da tabela
+		titulo:{ //campo 'titulo' com suas definições
+			type: sequelize.STRING,
+			allowNull: false
+		}
+		descricao:{ //campo 'descricao' com suas definições
+			type: sequelize.TEXT,
+			allowNull: false
+		}
+	})
+
+	*pergunta.sync({force:false}).then(()=>{}); //sincroniza com o banco para efetuar a criação da tabela, force sendo false não irá criar a tabela caso já exista no BD
+
+	*module.exports = pergunta; //exportando o modulo de pergunta
+
+*** ATENCAO *** ainda deve-se importar o modulo no index.js: const pergunta = require("./database/Pergunta");
+===============================================================================
+Rota responsavel por receber as informações do formuláio, salvar no banco de dados e redirecionar para pagina inicial:
+	*app.post("/salvarpergunta", (req, res) =>{
+		var titulo = req.body.titulo;
+		var descricao = req.body.descricao;
+
+		pergunta.create({
+			titulo: titulo,
+			descricao: descricao
+		}).then(()=>{
+			res.redirect("/");
+		});
+	});
+===============================================================================
+Na rota principal, está realizando a consulta na tabela de perguntas e usando o json 'raw: true' para que sejam tragos apenas os dados salvos na tabela:
+	*app.get("/", (req, res) => {
+		pergunta.findAll({raw: true}).then(perguntas =>{
+			console.log(perguntas);
+		})
+		res.render("index");
+	});
+===============================================================================
